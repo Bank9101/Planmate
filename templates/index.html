@@ -1,1 +1,102 @@
-{% extends 'base.html' %}
+{% extends 'base_planmate.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center fade-in">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-calendar-alt text-primary me-3"></i>Planmate
+            </h1>
+            <p class="lead mb-5">ระบบจัดตารางเรียนและตารางสอบอย่างมืออาชีพ</p>
+            <p class="mb-5">สร้างและจัดการรายวิชาของคุณ กำหนดตารางเรียนและสอบ และจัดระเบียบชีวิตนักศึกษาของคุณ!</p>
+            
+            <div class="mt-4">
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg me-3 mb-3">
+                    <i class="fas fa-tachometer-alt me-2"></i>ไปยังแดชบอร์ด
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-3 mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบ
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-success btn-lg mb-3">
+                    <i class="fas fa-user-plus me-2"></i>ลงทะเบียน
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-4" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-book fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">การจัดการรายวิชา</h5>
+                    <p class="card-text">สร้างและจัดการรายวิชาของคุณพร้อมข้อมูลรายละเอียดที่ครบถ้วน</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-success text-white rounded-circle mx-auto mb-4" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">ปฏิทินอินเตอร์แอคทีฟ</h5>
+                    <p class="card-text">ดูตารางของคุณในหลายรูปแบบ - รายวัน รายสัปดาห์ หรือรายเดือน</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-warning text-white rounded-circle mx-auto mb-4" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">การจัดระเบียบส่วนตัว</h5>
+                    <p class="card-text">แต่ละผู้ใช้จัดการรายวิชาและตารางของตนเองอย่างอิสระ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <h3 class="mb-4">ทำไมต้องเลือก Planmate?</h3>
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                                <span>อินเตอร์เฟซใช้งานง่าย</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                                <span>ออกแบบรองรับทุกอุปกรณ์</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                                <span>อัปเดตปฏิทินแบบเรียลไทม์</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                                <span>ระบบลงทะเบียนรายวิชา</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

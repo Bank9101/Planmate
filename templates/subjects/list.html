@@ -1,0 +1,196 @@
+{% extends 'base_planmate.html' %}
+
+{% block title %}รายวิชา - Planmate{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold mb-4"><i class="fas fa-book me-2"></i>รายวิชา</h1>
+            <p class="text-muted">จัดการรายวิชาของคุณและดูรายละเอียด</p>
+            
+            <ul class="nav nav-tabs mb-4" id="subjectTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="my-subjects-tab" data-bs-toggle="tab" data-bs-target="#my-subjects" type="button" role="tab">
+                        <i class="fas fa-user me-1"></i>รายวิชาของฉัน
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="all-subjects-tab" data-bs-toggle="tab" data-bs-target="#all-subjects" type="button" role="tab">
+                        <i class="fas fa-globe me-1"></i>รายวิชาทั้งหมด
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="subjectTabsContent">
+                <div class="tab-pane fade show active" id="my-subjects" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-0">รายวิชาของฉัน <span class="badge bg-primary">{{ subjects.count }}</span></h5>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                                <i class="fas fa-plus me-2"></i>เพิ่มรายวิชา
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if subjects %}
+                    <div class="table-responsive">
+                        <table class="table table-hover shadow">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>รหัสวิชา</th>
+                                    <th>ชื่อวิชา</th>
+                                    <th>หน่วยกิต</th>
+                                    <th>เทอม</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                <tr>
+                                    <td><strong>{{ subject.code }}</strong></td>
+                                    <td>{{ subject.name }}</td>
+                                    <td><span class="badge bg-success">{{ subject.credits }}</span></td>
+                                    <td>{{ subject.semester }}</td>
+                                    <td>
+                                        <a href="{% url 'subject_detail' subject.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'edit_subject' subject.id %}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <!-- Delete Subject Form -->
+                                        <form method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_subject" value="true">
+                                            <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายวิชานี้? การดำเนินการนี้ไม่สามารถยกเลิกได้')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center shadow">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h5>คุณยังไม่มีรายวิชาใดๆ</h5>
+                        <p class="mb-0">คลิก "เพิ่มรายวิชา" เพื่อสร้างรายวิชาแรกของคุณ</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="tab-pane fade" id="all-subjects" role="tabpanel">
+                    <h5 class="mb-4">รายวิชาทั้งหมด</h5>
+                    {% if all_subjects %}
+                    <div class="table-responsive">
+                        <table class="table table-hover shadow">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>รหัสวิชา</th>
+                                    <th>ชื่อวิชา</th>
+                                    <th>หน่วยกิต</th>
+                                    <th>เทอม</th>
+                                    <th>สร้างโดย</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in all_subjects %}
+                                <tr>
+                                    <td><strong>{{ subject.code }}</strong></td>
+                                    <td>{{ subject.name }}</td>
+                                    <td><span class="badge bg-success">{{ subject.credits }}</span></td>
+                                    <td>{{ subject.semester }}</td>
+                                    <td>{{ subject.created_by.username }}</td>
+                                    <td>
+                                        <a href="{% url 'subject_detail' subject.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if subject.id in scheduled_subject_ids %}
+                                        <a href="{% url 'unenroll_subject' subject.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'enroll_subject' subject.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center shadow">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h5>ไม่มีรายวิชาที่พร้อมใช้งาน</h5>
+                        <p class="mb-0">โปรดกลับมาตรวจสอบในภายหลังหรือสร้างรายวิชาของคุณเอง</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- เพิ่มรายวิชา Modal -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-book me-2"></i>เพิ่มรายวิชาใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSubjectForm" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_code" class="form-label">รหัสวิชา</label>
+                            {{ form.code }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">ชื่อวิชา</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">คำอธิบาย</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_credits" class="form-label">หน่วยกิต</label>
+                            {{ form.credits }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_semester" class="form-label">เทอม/ปีการศึกษา</label>
+                            {{ form.semester }}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="submitSubjectBtn">
+                        <i class="fas fa-plus me-2"></i>เพิ่มรายวิชา
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    document.getElementById('submitSubjectBtn').addEventListener('click', function() {
+        document.getElementById('addSubjectForm').submit();
+    });
+});
+</script>
+{% endblock %}

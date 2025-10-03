@@ -1,0 +1,46 @@
+{% extends 'base_planmate.html' %}
+
+{% block title %}ลงทะเบียน - Planmate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header text-center bg-primary text-white">
+                    <h3><i class="fas fa-calendar-alt me-2"></i>Planmate</h3>
+                    <h5>สร้างบัญชีใหม่</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">ชื่อผู้ใช้</label>
+                            {{ form.username }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">รหัสผ่าน</label>
+                            {{ form.password1 }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">ยืนยันรหัสผ่าน</label>
+                            {{ form.password2 }}
+                        </div>
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>{{ form.errors }}
+                        </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>ลงทะเบียน
+                        </button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p>มีบัญชีอยู่แล้ว? <a href="{% url 'login' %}">เข้าสู่ระบบที่นี่</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

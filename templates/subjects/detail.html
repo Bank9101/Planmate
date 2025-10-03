@@ -1,0 +1,233 @@
+{% extends 'base_planmate.html' %}
+
+{% block title %}{{ subject.code }} - {{ subject.name }} - Planmate{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">แดชบอร์ด</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">รายวิชา</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ subject.code }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="fw-bold">{{ subject.code }} - {{ subject.name }}</h1>
+                    <p class="lead text-muted">{{ subject.description }}</p>
+                    <p class="mb-0"><i class="fas fa-user me-1"></i>สร้างโดย: {{ subject.created_by.username }}</p>
+                </div>
+                <div>
+                    {% if is_owner %}
+                    <!-- Delete Subject Form -->
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_subject" value="true">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายวิชานี้? การดำเนินการนี้ไม่สามารถยกเลิกได้')">
+                            <i class="fas fa-trash me-2"></i>ลบรายวิชา
+                        </button>
+                    </form>
+                    <a href="{% url 'edit_subject' subject.id %}" class="btn btn-warning ms-2">
+                        <i class="fas fa-edit me-2"></i>แก้ไขรายวิชา
+                    </a>
+                    {% elif is_scheduled %}
+                    <a href="{% url 'unenroll_subject' subject.id %}" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>ลบออกจากตาราง
+                    </a>
+                    {% else %}
+                    <a href="{% url 'enroll_subject' subject.id %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>เพิ่มลงตาราง
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>ข้อมูลรายวิชา</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th><i class="fas fa-hashtag me-2"></i>รหัสวิชา:</th>
+                                    <td><strong>{{ subject.code }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th><i class="fas fa-heading me-2"></i>ชื่อวิชา:</th>
+                                    <td>{{ subject.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="fas fa-graduation-cap me-2"></i>หน่วยกิต:</th>
+                                    <td><span class="badge bg-success">{{ subject.credits }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th><i class="fas fa-calendar-alt me-2"></i>เทอม:</th>
+                                    <td>{{ subject.semester }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="fas fa-user me-2"></i>สร้างโดย:</th>
+                                    <td>{{ subject.created_by.username }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card shadow h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="fas fa-cogs me-2"></i>การดำเนินการ</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if is_owner %}
+                            <button class="btn btn-info w-100 mb-3" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                                <i class="fas fa-calendar-plus me-2"></i>เพิ่มกิจกรรม
+                            </button>
+                            {% endif %}
+                            
+                            <a href="{% url 'calendar_view' %}?subject={{ subject.id }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-calendar me-2"></i>ดูในปฏิทิน
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4 shadow">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-calendar me-2"></i>กิจกรรมสำหรับ {{ subject.code }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if events %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ประเภท</th>
+                                    <th>วันที่และเวลา</th>
+                                    <th>สถานที่</th>
+                                    <th>หมายเหตุ</th>
+                                    {% if is_owner %}
+                                    <th>การดำเนินการ</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if event.event_type == 'class' %}primary{% elif event.event_type == 'exam' %}danger{% else %}success{% endif %}">
+                                            {{ event.get_event_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ event.start_time|date:"M d, Y" }}<br>
+                                        <small>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</small>
+                                    </td>
+                                    <td>{{ event.location }}</td>
+                                    <td>{{ event.notes|truncatewords:10 }}</td>
+                                    {% if is_owner %}
+                                    <td>
+                                        <a href="{% url 'edit_event' subject.id event.id %}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <!-- Delete Event Form -->
+                                        <form method="post" style="display: inline;" class="ms-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_event" value="true">
+                                            <input type="hidden" name="event_id" value="{{ event.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                        <p class="mb-0">ยังไม่มีกิจกรรมที่กำหนดไว้สำหรับรายวิชานี้</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if is_owner %}
+                    <button class="btn btn-info mt-3" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                        <i class="fas fa-calendar-plus me-2"></i>เพิ่มกิจกรรม
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- เพิ่มกิจกรรม Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>เพิ่มกิจกรรมใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEventForm" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="subject" value="{{ subject.id }}">
+                        <div class="mb-3">
+                            <label for="id_event_type" class="form-label">ประเภทกิจกรรม</label>
+                            {{ form.event_type }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_start_time" class="form-label">วันที่และเวลาเริ่มต้น</label>
+                            {{ form.start_time }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_end_time" class="form-label">วันที่และเวลาสิ้นสุด</label>
+                            {{ form.end_time }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_location" class="form-label">สถานที่</label>
+                            {{ form.location }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_notes" class="form-label">หมายเหตุ</label>
+                            {{ form.notes }}
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ form.repeat_weekly }}
+                            <label class="form-check-label" for="id_repeat_weekly">
+                                ทำซ้ำทุกสัปดาห์
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="submitEventBtn">
+                        <i class="fas fa-plus me-2"></i>เพิ่มกิจกรรม
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    document.getElementById('submitEventBtn').addEventListener('click', function() {
+        document.getElementById('addEventForm').submit();
+    });
+});
+</script>
+{% endblock %}

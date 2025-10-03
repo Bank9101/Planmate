@@ -1,0 +1,210 @@
+{% extends 'base_planmate.html' %}
+
+{% block title %}ปฏิทิน - Planmate{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold mb-4"><i class="fas fa-calendar-alt me-2"></i>ปฏิทิน</h1>
+            <p class="text-muted">ดูตารางเรียนและตารางสอบของคุณ</p>
+            
+            <div class="card shadow">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="fas fa-calendar me-2"></i>ตารางปฏิทิน</h5>
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                            <i class="fas fa-plus me-2"></i>เพิ่มกิจกรรม
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- เพิ่มกิจกรรม Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>เพิ่มกิจกรรมใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEventForm">
+                        <div class="mb-3">
+                            <label for="eventSubject" class="form-label">รายวิชา</label>
+                            <select class="form-control" id="eventSubject" required>
+                                <option value="">เลือกรายวิชา</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventType" class="form-label">ประเภทกิจกรรม</label>
+                            <select class="form-control" id="eventType" required>
+                                <option value="class">เรียน</option>
+                                <option value="exam">สอบ</option>
+                                <option value="lab">แลป</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventStart" class="form-label">วันที่และเวลาเริ่มต้น</label>
+                            <input type="datetime-local" class="form-control" id="eventStart" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventEnd" class="form-label">วันที่และเวลาสิ้นสุด</label>
+                            <input type="datetime-local" class="form-control" id="eventEnd" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventLocation" class="form-label">สถานที่</label>
+                            <input type="text" class="form-control" id="eventLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventNotes" class="form-label">หมายเหตุ</label>
+                            <textarea class="form-control" id="eventNotes" rows="3"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="eventRepeat">
+                            <label class="form-check-label" for="eventRepeat">
+                                ทำซ้ำทุกสัปดาห์
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="submitEventBtn">
+                        <i class="fas fa-plus me-2"></i>เพิ่มกิจกรรม
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- รายละเอียดกิจกรรม Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalTitle">รายละเอียดกิจกรรม</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="eventModalBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-warning" id="editEventBtn">แก้ไข</button>
+                    <button type="button" class="btn btn-danger" id="deleteEventBtn">ลบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var currentEventId = null;
+    var currentSubjectId = null;
+    
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+            fetch('{% url "get_events" %}')
+                .then(response => response.json())
+                .then(events => {
+                    successCallback(events);
+                })
+                .catch(error => {
+                    failureCallback(error);
+                });
+        },
+        eventClick: function(info) {
+            currentEventId = info.event.id;
+            // Get subject_id from extendedProps if available
+            currentSubjectId = info.event.extendedProps.subject_id || null;
+            showEventDetails(info.event);
+        },
+        editable: false,
+        selectable: true,
+        select: function(info) {
+            // ในการใช้งานจริง ระบบจะเปิด modal เพิ่มกิจกรรม
+            // พร้อมกับกำหนดวันที่/เวลาที่เลือกไว้ล่วงหน้า
+            console.log('Selected time: ' + info.startStr + ' to ' + info.endStr);
+        },
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false
+        }
+    });
+    
+    calendar.render();
+    
+    // Handle form submission
+    document.getElementById('submitEventBtn').addEventListener('click', function() {
+        // ในการใช้งานจริง ระบบจะทำการเรียก AJAX เพื่อเพิ่มกิจกรรม
+        alert('ในการใช้งานจริง ระบบจะเพิ่มกิจกรรมใหม่');
+        $('#addEventModal').modal('hide');
+    });
+    
+    // Handle edit button
+    document.getElementById('editEventBtn').addEventListener('click', function() {
+        if (currentEventId) {
+            // Redirect to subject detail page for editing
+            if (currentSubjectId) {
+                window.location.href = '/subjects/' + currentSubjectId + '/';
+            } else {
+                alert('ในการใช้งานจริง ระบบจะแก้ไขกิจกรรม ID: ' + currentEventId);
+            }
+        }
+        $('#eventModal').modal('hide');
+    });
+    
+    // Handle delete button
+    document.getElementById('deleteEventBtn').addEventListener('click', function() {
+        if (currentEventId) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?')) {
+                // Redirect to delete URL
+                window.location.href = '/events/' + currentEventId + '/delete/';
+            }
+        }
+        $('#eventModal').modal('hide');
+    });
+});
+
+function showEventDetails(event) {
+    document.getElementById('eventModalTitle').textContent = event.title;
+    
+    var eventDetails = '<div class="row"><div class="col-12">';
+    eventDetails += '<p><strong><i class="fas fa-book me-2"></i>รายวิชา:</strong> ' + event.extendedProps.subject + '</p>';
+    eventDetails += '<p><strong><i class="fas fa-clock me-2"></i>วันที่และเวลา:</strong> ' + formatDate(event.start) + ' - ' + formatDate(event.end) + '</p>';
+    eventDetails += '<p><strong><i class="fas fa-map-marker-alt me-2"></i>สถานที่:</strong> ' + event.extendedProps.location + '</p>';
+    eventDetails += '<p><strong><i class="fas fa-sticky-note me-2"></i>หมายเหตุ:</strong> ' + (event.extendedProps.notes || 'ไม่มีหมายเหตุ') + '</p>';
+    eventDetails += '</div></div>';
+    
+    document.getElementById('eventModalBody').innerHTML = eventDetails;
+    
+    new bootstrap.Modal(document.getElementById('eventModal')).show();
+}
+
+function formatDate(date) {
+    return new Date(date).toLocaleString();
+}
+</script>
+{% endblock %}

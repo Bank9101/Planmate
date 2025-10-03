@@ -1,0 +1,61 @@
+{% extends 'base_planmate.html' %}
+
+{% block title %}แก้ไข {{ subject.code }} - {{ subject.name }} - Planmate{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">แดชบอร์ด</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">รายวิชา</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'subject_detail' subject.id %}">{{ subject.code }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">แก้ไข</li>
+                </ol>
+            </nav>
+            
+            <h1 class="fw-bold mb-4"><i class="fas fa-edit me-2"></i>แก้ไขรายวิชา</h1>
+            
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-book me-2"></i>ข้อมูลรายวิชา</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">รหัสวิชา</label>
+                            {{ form.code }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">ชื่อวิชา</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">คำอธิบาย</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.credits.id_for_label }}" class="form-label">หน่วยกิต</label>
+                            {{ form.credits }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.semester.id_for_label }}" class="form-label">เทอม/ปีการศึกษา</label>
+                            {{ form.semester }}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'subject_detail' subject.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>กลับ
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>บันทึกการเปลี่ยนแปลง
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
